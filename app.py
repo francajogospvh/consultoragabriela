@@ -52,11 +52,11 @@ def enviar_contato():
                 'mensagem': 'Email inválido'
             }), 400
         
-        # ===== EMAIL PARA O CLIENTE =====
+        # ===== EMAIL PARA O CLIENTE (usa o email informado no formulário) =====
         try:
             msg_cliente = Message(
                 subject='✅ Cotação Recebida - Consultora Gabriela',
-                recipients=[email],
+                recipients=[email],  # Email do cliente informado no formulário
                 html=f"""
                 <html>
                     <head>
@@ -114,11 +114,13 @@ def enviar_contato():
                 'mensagem': f'Erro ao enviar confirmação: {str(e)}'
             }), 500
         
-        # ===== EMAIL PARA A CORRETORA =====
+        # ===== EMAIL PARA A CORRETORA (usa email configurado em .env para testes) =====
         try:
+            email_corretora = os.getenv('EMAIL_CORRETORA', 'francislley@gmail.com')  # Para testes
+            
             msg_corretora = Message(
                 subject=f'🔔 Nova Cotação Recebida - {nome}',
-                recipients=['corretoradesegurostransparenci@gmail.com'],
+                recipients=[email_corretora],
                 html=f"""
                 <html>
                     <head>
@@ -167,7 +169,7 @@ def enviar_contato():
                 """
             )
             mail.send(msg_corretora)
-            print(f"✅ Email enviado para corretora: corretoradesegurostransparenci@gmail.com")
+            print(f"✅ Email enviado para corretora: {email_corretora}")
         
         except Exception as e:
             print(f"❌ Erro ao enviar email para corretora: {e}")
