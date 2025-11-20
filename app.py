@@ -1,142 +1,207 @@
 from flask import Flask, render_template, request, jsonify
 from flask_mail import Mail, Message
 import os
-from config import config
 from dotenv import load_dotenv
 
+# Carregar variáveis de ambiente
 load_dotenv()
 
-# Inicializar Flask
-app = Flask(__name__, 
-            template_folder='templates',
-            static_folder='static')
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave-secreta-consultora-gabriela')
 
-# Carregar configuração
-app.config.from_object(config[os.getenv('FLASK_ENV', 'development')])
+# ===== CONFIGURAÇÃO DE EMAIL =====
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'francislley@gmail.com')
+app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD', 'vmng byaa zbmw jzqo')
+app.config['MAIL_DEFAULT_SENDER'] = ('Consultora Gabriela', os.getenv('EMAIL_USER', 'francislley@gmail.com'))
 
-# Inicializar Mail
 mail = Mail(app)
 
-print("✅ Flask app inicializado com sucesso!")
-print(f"📧 Email: {app.config.get('MAIL_USERNAME')}")
-print(f"🔧 Debug: {app.debug}")
+# ===== ROTAS =====
 
-# ==================== ROTAS ====================
-
-# Rota: Página Principal
 @app.route('/')
 def index():
-    """Renderizar landing page"""
-    print("📄 Acessando home page...")
+    """Renderiza a página principal"""
     return render_template('index.html')
 
-# Rota: Receber Formulário
-@app.route('/api/contact', methods=['POST'])
-def contact():
-    """Processar formulário de cotação"""
+@app.route('/enviar-contato', methods=['POST'])
+def enviar_contato():
+    """Recebe dados do formulário e envia emails"""
     try:
-        data = request.get_json()
+        dados = request.get_json()
         
-        print(f"📨 Formulário recebido:")
-        print(f"   Nome: {data.get('name')}")
-        print(f"   Email: {data.get('email')}")
-        print(f"   Telefone: {data.get('phone')}")
-        print(f"   Tipo: {data.get('insuranceType')}")
+        # Validações básicas
+        nome = dados.get('name', '').strip()
+        email = dados.get('email', '').strip()
+        telefone = dados.get('phone', '').strip()
+        tipo_seguro = dados.get('insuranceType', '').strip()
+        mensagem = dados.get('message', '').strip()
         
-        # Validar dados
-        if not all([data.get('name'), data.get('email'), data.get('phone'), data.get('insuranceType')]):
-            print("❌ Dados incompletos")
-            return jsonify({'success': False, 'message': 'Dados incompletos'}), 400
+        if not nome or not email or not telefone:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': 'Preencha todos os campos obrigatórios (Nome, Email, Telefone)'
+            }), 400
         
-        # Email para a corretora
-        print("📤 Enviando email para corretora...")
-        msg_corretora = Message(
-            subject=f"Nova Cotação de Seguro - {data['insuranceType']}",
-            recipients=['corretoradesegurostransparenci@gmail.com'],
-            html=f"""
-                <h2>Nova Solicitação de Cotação</h2>
-                <p><strong>Nome:</strong> {data['name']}</p>
-                <p><strong>Email:</strong> {data['email']}</p>
-                <p><strong>Telefone:</strong> {data['phone']}</p>
-                <p><strong>Tipo de Seguro:</strong> {data['insuranceType']}</p>
-                <p><strong>Mensagem:</strong> {data.get('message', 'Sem observações')}</p>
-            """
-        )
-        mail.send(msg_corretora)
-        print("✅ Email enviado para corretora!")
+        # Validar email básico
+        if '@' not in email:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': 'Email inválido'
+            }), 400
         
-        # Email de confirmação para o cliente
-        print("📤 Enviando confirmação para cliente...")
-        msg_cliente = Message(
-            subject='Cotação Recebida - Transparência Seguros ✅',
-            recipients=[data['email']],
-            html=f"""
-                <h2>Recebemos sua solicitação!</h2>
-                <p>Olá <strong>{data['name']}</strong>,</p>
-                <p>Recebemos sua solicitação de cotação para <strong>{data['insuranceType']}</strong>.</p>
-                <p>Nossa equipe entrará em contato em breve através do WhatsApp: <strong>(69) 98449-7856</strong></p>
-                <hr>
-                <p>Abraços,<br><strong>Transparência Corretora de Seguros</strong></p>
-            """
-        )
-        mail.send(msg_cliente)
-        print("✅ Confirmação enviada para cliente!")
+        # ===== EMAIL PARA O CLIENTE =====
+        try:
+            msg_cliente = Message(
+                subject='✅ Cotação Recebida - Consultora Gabriela',
+                recipients=[email],
+                html=f"""
+                <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <style>
+                            body {{ font-family: Arial, sans-serif; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }}
+                            .header {{ background-color: #1e3a8a; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; }}
+                            .content {{ background-color: white; padding: 20px; border-radius: 0 0 5px 5px; }}
+                            .dados {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                            .dados p {{ margin: 8px 0; }}
+                            .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; }}
+                            strong {{ color: #1e3a8a; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1>Obrigado pelo seu interesse! 💚</h1>
+                            </div>
+                            <div class="content">
+                                <p>Olá <strong>{nome}</strong>,</p>
+                                
+                                <p>Recebemos sua solicitação de cotação com sucesso! Em breve nossa equipe entrará em contato com você para apresentar as melhores opções de seguros.</p>
+                                
+                                <div class="dados">
+                                    <h3>📋 Seus Dados:</h3>
+                                    <p><strong>Nome:</strong> {nome}</p>
+                                    <p><strong>Email:</strong> {email}</p>
+                                    <p><strong>Telefone:</strong> {telefone}</p>
+                                    <p><strong>Tipo de Seguro:</strong> {tipo_seguro if tipo_seguro else 'Não especificado'}</p>
+                                    {f'<p><strong>Observações:</strong> {mensagem}</p>' if mensagem else ''}
+                                </div>
+                                
+                                <p>Se você tiver dúvidas, pode nos contatar via WhatsApp:</p>
+                                <p><strong>📱 (69) 99844-9786</strong></p>
+                                
+                                <p>Atenciosamente,<br><strong>Consultora Gabriela</strong><br>Transparência Seguros</p>
+                            </div>
+                            <div class="footer">
+                                <p>Este é um email automático. Não responda a este endereço.</p>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+                """
+            )
+            mail.send(msg_cliente)
+            print(f"✅ Email enviado para cliente: {email}")
         
+        except Exception as e:
+            print(f"❌ Erro ao enviar email para cliente: {e}")
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'Erro ao enviar confirmação: {str(e)}'
+            }), 500
+        
+        # ===== EMAIL PARA A CORRETORA =====
+        try:
+            msg_corretora = Message(
+                subject=f'🔔 Nova Cotação Recebida - {nome}',
+                recipients=['corretoradesegurostransparenci@gmail.com'],
+                html=f"""
+                <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <style>
+                            body {{ font-family: Arial, sans-serif; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }}
+                            .header {{ background-color: #1e3a8a; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; }}
+                            .content {{ background-color: white; padding: 20px; border-radius: 0 0 5px 5px; }}
+                            .dados {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                            .dados p {{ margin: 8px 0; }}
+                            .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; }}
+                            strong {{ color: #1e3a8a; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <h1>Nova Solicitação de Cotação</h1>
+                            </div>
+                            <div class="content">
+                                <p>Uma nova cotação foi recebida pelo site!</p>
+                                
+                                <div class="dados">
+                                    <h3>👤 Dados do Cliente:</h3>
+                                    <p><strong>Nome:</strong> {nome}</p>
+                                    <p><strong>Email:</strong> {email}</p>
+                                    <p><strong>Telefone:</strong> {telefone}</p>
+                                </div>
+                                
+                                <div class="dados">
+                                    <h3>📊 Tipo de Seguro:</h3>
+                                    <p><strong>{tipo_seguro if tipo_seguro else 'Não especificado'}</strong></p>
+                                </div>
+                                
+                                {f'<div class="dados"><h3>📝 Observações:</h3><p>{mensagem}</p></div>' if mensagem else ''}
+                                
+                                <p><strong>Ação sugerida:</strong> Entre em contato com o cliente via WhatsApp ou email para apresentar as opções de seguros.</p>
+                            </div>
+                            <div class="footer">
+                                <p>Este é um email automático do sistema.</p>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+                """
+            )
+            mail.send(msg_corretora)
+            print(f"✅ Email enviado para corretora: corretoradesegurostransparenci@gmail.com")
+        
+        except Exception as e:
+            print(f"❌ Erro ao enviar email para corretora: {e}")
+            # Não retorna erro aqui, pois o cliente já recebeu confirmação
+        
+        # Resposta de sucesso
         return jsonify({
-            'success': True, 
-            'message': 'Cotação enviada com sucesso!'
+            'sucesso': True, 
+            'mensagem': 'Cotação enviada com sucesso! Verifique seu email para confirmação.'
         }), 200
     
     except Exception as e:
-        print(f"❌ ERRO: {str(e)}")
+        print(f"❌ Erro geral ao processar cotação: {e}")
         return jsonify({
-            'success': False, 
-            'message': f'Erro ao enviar cotação: {str(e)}'
+            'sucesso': False, 
+            'mensagem': f'Erro ao processar sua solicitação: {str(e)}'
         }), 500
 
-# Rota: Teste de Email (apenas desenvolvimento)
-@app.route('/test-email')
-def test_email():
-    """Testar envio de email"""
-    print("🧪 Testando email...")
-    try:
-        msg = Message(
-            subject='Teste de Email - Transparência Seguros',
-            recipients=['corretoradesegurostransparenci@gmail.com'],
-            body='Este é um email de teste! ✅'
-        )
-        mail.send(msg)
-        print("✅ Email de teste enviado com sucesso!")
-        return '✅ Email de teste enviado com sucesso!', 200
-    except Exception as e:
-        print(f"❌ Erro ao enviar email: {str(e)}")
-        return f'❌ Erro: {str(e)}', 500
-
-# Rota: Teste de Saúde
-@app.route('/health')
-def health():
-    """Verificar se servidor está online"""
-    return jsonify({'status': 'OK', 'message': 'Servidor está funcionando!'}), 200
-
-# ==================== TRATAMENTO DE ERROS ====================
+# ===== TRATAMENTO DE ERROS =====
 
 @app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Página não encontrada'}), 404
+def page_not_found(e):
+    """Redireciona erros 404 para a página principal"""
+    return render_template('index.html'), 404
 
 @app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Erro interno do servidor'}), 500
+def internal_error(e):
+    """Trata erros internos do servidor"""
+    return jsonify({
+        'sucesso': False, 
+        'mensagem': 'Erro interno do servidor'
+    }), 500
 
-# ==================== MAIN ====================
+# ===== INICIALIZAÇÃO =====
 
 if __name__ == '__main__':
-    print("\n" + "="*50)
-    print("🚀 INICIANDO SERVIDOR FLASK")
-    print("="*50)
-    print("📍 URL: http://127.0.0.1:5000")
-    print("📍 Teste: http://127.0.0.1:5000/health")
-    print("📧 Email: http://127.0.0.1:5000/test-email")
-    print("="*50 + "\n")
-    
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=False)

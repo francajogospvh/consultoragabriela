@@ -148,6 +148,7 @@ body {
     background-color: #d4af37;
     color: #364F6B;
     transform: translateY(-2px);
+    text-decoration: none !important;
 }
 
 .hero-professional-image {
@@ -987,5 +988,36 @@ body {
     .btn-primary,
     .btn-outline {
         width: 100%;
+        text-decoration: none !important;
+        color: inherit;
+        display: inline-block;
+        border: none;
     }
+}
+
+/* Remove sublinhado de todos os botões */
+.btn-primary,
+.btn-outline,
+.btn-large {
+    text-decoration: none !important;
+    color: inherit;
+}
+
+.btn-primary:hover,
+.btn-outline:hover,
+.btn-large:hover {
+    text-decoration: none !important;
+}
+
+/* Se os botões forem links */
+a.btn-primary,
+a.btn-outline,
+a.btn-large {
+    text-decoration: none !important;
+}
+
+a.btn-primary:hover,
+a.btn-outline:hover,
+a.btn-large:hover {
+    text-decoration: none !important;
 }
