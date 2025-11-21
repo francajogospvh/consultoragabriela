@@ -422,29 +422,28 @@ body {
     padding: 0 20px;
 }
 
+/* ==================== BLACK FRIDAY TAPES (NÃO FLUTUANTE) ==================== */
 .black-friday-tape-top,
 .black-friday-tape-bottom {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 300px;
+    width: 100%;
     background: linear-gradient(45deg, #ff0000, #ffcc00);
     color: white;
     text-align: center;
     font-weight: bold;
     font-size: 18px;
     padding: 10px;
-    z-index: 1000;
+    z-index: 50;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    border-radius: 5px;
+    overflow: hidden;
+    margin: 0;
 }
 
 .black-friday-tape-top {
-    top: 20px;
+    margin-bottom: 2rem;
 }
 
 .black-friday-tape-bottom {
-    bottom: 20px;
+    margin-top: 2rem;
 }
 
 .tape-text {
@@ -479,6 +478,32 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     margin: 3rem 0;
+    align-items: stretch;
+}
+
+/* Botões da Black Friday alinhados */
+.black-friday-promo,
+.black-friday-plans {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.promo-content,
+.plans-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+
+.btn-large {
+    width: 100% !important;
+    padding: 15px 30px !important;
+    font-size: 1.1rem !important;
+    min-width: 250px;
+    margin-top: auto;
+    align-self: center;
 }
 
 /* ====== CARD PROMOÇÃO ====== */
