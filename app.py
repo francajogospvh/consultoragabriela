@@ -22,11 +22,11 @@ app.config['MAIL_PORT'] = 587
 # Habilita Transport Layer Security (TLS)
 app.config['MAIL_USE_TLS'] = True
 # Nome de usuário para autenticação SMTP (seu email Gmail)
-app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'seu_email_gmail@gmail.com')
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'francislley@gmail.com')
 # Senha para autenticação SMTP (sua App Password do Gmail)
-app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD', 'sua_app_password_aqui')
+app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD', 'vmngbyaazbmwjzqo')
 # Remetente padrão para os emails
-app.config['MAIL_DEFAULT_SENDER'] = ('Consultora Gabriela', os.getenv('EMAIL_USER', 'seu_email_gmail@gmail.com'))
+app.config['MAIL_DEFAULT_SENDER'] = ('Consultora Gabriela', os.getenv('EMAIL_USER', 'francislley@gmail.com'))
 
 # Inicializa o objeto Mail com as configurações do app
 mail = Mail(app)
