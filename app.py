@@ -3,67 +3,91 @@ from flask_mail import Mail, Message
 import os
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente
+# Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
+# Inicialização do aplicativo Flask
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave-secreta-consultora-gabriela')
 
-# ===== CONFIGURAÇÃO DE EMAIL =====
+# Configuração da chave secreta para segurança (pode ser usada para sessões, etc.)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave-secreta-consultora-gabriela-padrao')
+
+# ==============================================================================
+# CONFIGURAÇÃO DE EMAIL COM FLASK-MAIL
+# ==============================================================================
+# Servidor SMTP do Gmail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+# Porta padrão para TLS
 app.config['MAIL_PORT'] = 587
+# Habilita Transport Layer Security (TLS)
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'francislley@gmail.com')
-app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD', 'vmng byaa zbmw jzqo')
-app.config['MAIL_DEFAULT_SENDER'] = ('Consultora Gabriela', os.getenv('EMAIL_USER', 'francislley@gmail.com'))
+# Nome de usuário para autenticação SMTP (seu email Gmail)
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'seu_email_gmail@gmail.com')
+# Senha para autenticação SMTP (sua App Password do Gmail)
+app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD', 'sua_app_password_aqui')
+# Remetente padrão para os emails
+app.config['MAIL_DEFAULT_SENDER'] = ('Consultora Gabriela', os.getenv('EMAIL_USER', 'seu_email_gmail@gmail.com'))
 
+# Inicializa o objeto Mail com as configurações do app
 mail = Mail(app)
 
-# ===== ROTAS =====
+# ==============================================================================
+# ROTAS DO APLICATIVO
+# ==============================================================================
 
 @app.route('/')
 def index():
-    """Renderiza a página principal"""
+    """
+    Rota principal que renderiza a página inicial (index.html).
+    """
     return render_template('index.html')
 
 @app.route('/enviar-contato', methods=['POST'])
 def enviar_contato():
-    """Recebe dados do formulário e envia emails"""
+    """
+    Rota para receber dados do formulário de contato via AJAX (POST request).
+    Envia emails de confirmação para o cliente e notificação para a corretora.
+    """
     try:
+        # Pega os dados JSON enviados pelo formulário
         dados = request.get_json()
         
-        # Validações básicas
+        # Extrai e limpa os dados do formulário
         nome = dados.get('name', '').strip()
-        email = dados.get('email', '').strip()
+        email_cliente = dados.get('email', '').strip()
         telefone = dados.get('phone', '').strip()
         tipo_seguro = dados.get('insuranceType', '').strip()
         mensagem = dados.get('message', '').strip()
         
-        if not nome or not email or not telefone:
+        # ======================================================================
+        # VALIDAÇÕES BÁSICAS
+        # ======================================================================
+        if not nome or not email_cliente or not telefone:
             return jsonify({
                 'sucesso': False, 
-                'mensagem': 'Preencha todos os campos obrigatórios (Nome, Email, Telefone)'
+                'mensagem': 'Por favor, preencha todos os campos obrigatórios (Nome, Email, Telefone).'
             }), 400
         
-        # Validar email básico
-        if '@' not in email:
+        if '@' not in email_cliente or '.' not in email_cliente:
             return jsonify({
                 'sucesso': False, 
-                'mensagem': 'Email inválido'
+                'mensagem': 'O endereço de e-mail fornecido é inválido.'
             }), 400
         
-        # ===== EMAIL PARA O CLIENTE (usa o email informado no formulário) =====
+        # ======================================================================
+        # ENVIO DE EMAIL PARA O CLIENTE (confirmação)
+        # ======================================================================
         try:
             msg_cliente = Message(
-                subject='✅ Cotação Recebida - Consultora Gabriela',
-                recipients=[email],  # Email do cliente informado no formulário
+                subject='✅ Sua Cotação foi Recebida - Consultora Gabriela',
+                recipients=[email_cliente],  # Envia para o email que o cliente informou
                 html=f"""
                 <html>
                     <head>
                         <meta charset="utf-8">
                         <style>
                             body {{ font-family: Arial, sans-serif; color: #333; }}
-                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; border-radius: 8px; }}
                             .header {{ background-color: #1e3a8a; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; }}
                             .content {{ background-color: white; padding: 20px; border-radius: 0 0 5px 5px; }}
                             .dados {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; }}
@@ -85,14 +109,14 @@ def enviar_contato():
                                 <div class="dados">
                                     <h3>📋 Seus Dados:</h3>
                                     <p><strong>Nome:</strong> {nome}</p>
-                                    <p><strong>Email:</strong> {email}</p>
+                                    <p><strong>Email:</strong> {email_cliente}</p>
                                     <p><strong>Telefone:</strong> {telefone}</p>
                                     <p><strong>Tipo de Seguro:</strong> {tipo_seguro if tipo_seguro else 'Não especificado'}</p>
                                     {f'<p><strong>Observações:</strong> {mensagem}</p>' if mensagem else ''}
                                 </div>
                                 
                                 <p>Se você tiver dúvidas, pode nos contatar via WhatsApp:</p>
-                                <p><strong>📱 (69) 99844-9786</strong></p>
+                                <p><strong>📱 (69) 99844-97856</strong></p>
                                 
                                 <p>Atenciosamente,<br><strong>Consultora Gabriela</strong><br>Transparência Seguros</p>
                             </div>
@@ -105,29 +129,34 @@ def enviar_contato():
                 """
             )
             mail.send(msg_cliente)
-            print(f"✅ Email enviado para cliente: {email}")
+            print(f"✅ Email de confirmação enviado para o cliente: {email_cliente}")
         
         except Exception as e:
-            print(f"❌ Erro ao enviar email para cliente: {e}")
+            print(f"❌ Erro ao enviar email de confirmação para o cliente ({email_cliente}): {e}")
+            # Se o email do cliente falhar, ainda tentamos enviar para a corretora
+            # e informamos o cliente sobre o erro no retorno JSON.
             return jsonify({
                 'sucesso': False, 
-                'mensagem': f'Erro ao enviar confirmação: {str(e)}'
+                'mensagem': f'Sua cotação foi recebida, mas houve um erro ao enviar a confirmação para seu e-mail: {str(e)}'
             }), 500
         
-        # ===== EMAIL PARA A CORRETORA (usa email configurado em .env para testes) =====
+        # ======================================================================
+        # ENVIO DE EMAIL PARA A CORRETORA (notificação de nova cotação)
+        # ======================================================================
         try:
-            email_corretora = os.getenv('EMAIL_CORRETORA', 'francislley@gmail.com')  # Para testes
+            # Pega o email da corretora do .env (para testes, usa francislley@gmail.com)
+            email_corretora = os.getenv('EMAIL_CORRETORA', 'francislley@gmail.com')
             
             msg_corretora = Message(
                 subject=f'🔔 Nova Cotação Recebida - {nome}',
-                recipients=[email_corretora],
+                recipients=[email_corretora], # Envia para o email da corretora
                 html=f"""
                 <html>
                     <head>
                         <meta charset="utf-8">
                         <style>
                             body {{ font-family: Arial, sans-serif; color: #333; }}
-                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; border-radius: 8px; }}
                             .header {{ background-color: #1e3a8a; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; }}
                             .content {{ background-color: white; padding: 20px; border-radius: 0 0 5px 5px; }}
                             .dados {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; }}
@@ -147,7 +176,7 @@ def enviar_contato():
                                 <div class="dados">
                                     <h3>👤 Dados do Cliente:</h3>
                                     <p><strong>Nome:</strong> {nome}</p>
-                                    <p><strong>Email:</strong> {email}</p>
+                                    <p><strong>Email:</strong> {email_cliente}</p>
                                     <p><strong>Telefone:</strong> {telefone}</p>
                                 </div>
                                 
@@ -169,41 +198,55 @@ def enviar_contato():
                 """
             )
             mail.send(msg_corretora)
-            print(f"✅ Email enviado para corretora: {email_corretora}")
+            print(f"✅ Email de notificação enviado para a corretora: {email_corretora}")
         
         except Exception as e:
-            print(f"❌ Erro ao enviar email para corretora: {e}")
-            # Não retorna erro aqui, pois o cliente já recebeu confirmação
+            print(f"❌ Erro ao enviar email de notificação para a corretora ({email_corretora}): {e}")
+            # Este erro não impede o sucesso da requisição para o cliente,
+            # pois o cliente já recebeu a confirmação.
         
-        # Resposta de sucesso
+        # ======================================================================
+        # RESPOSTA DE SUCESSO PARA O CLIENTE
+        # ======================================================================
         return jsonify({
             'sucesso': True, 
-            'mensagem': 'Cotação enviada com sucesso! Verifique seu email para confirmação.'
+            'mensagem': 'Sua cotação foi enviada com sucesso! Verifique seu e-mail para a confirmação.'
         }), 200
     
     except Exception as e:
-        print(f"❌ Erro geral ao processar cotação: {e}")
+        # Captura qualquer outro erro inesperado durante o processamento
+        print(f"❌ Erro geral ao processar solicitação de cotação: {e}")
         return jsonify({
             'sucesso': False, 
-            'mensagem': f'Erro ao processar sua solicitação: {str(e)}'
+            'mensagem': f'Ocorreu um erro inesperado ao processar sua solicitação: {str(e)}'
         }), 500
 
-# ===== TRATAMENTO DE ERROS =====
+# ==============================================================================
+# TRATAMENTO DE ERROS HTTP
+# ==============================================================================
 
 @app.errorhandler(404)
 def page_not_found(e):
-    """Redireciona erros 404 para a página principal"""
+    """
+    Trata erros 404 (Página Não Encontrada) redirecionando para a página inicial.
+    """
     return render_template('index.html'), 404
 
 @app.errorhandler(500)
 def internal_error(e):
-    """Trata erros internos do servidor"""
+    """
+    Trata erros 500 (Erro Interno do Servidor) retornando uma mensagem JSON.
+    """
     return jsonify({
         'sucesso': False, 
-        'mensagem': 'Erro interno do servidor'
+        'mensagem': 'Erro interno do servidor. Por favor, tente novamente mais tarde.'
     }), 500
 
-# ===== INICIALIZAÇÃO =====
+# ==============================================================================
+# INICIALIZAÇÃO DO SERVIDOR FLASK
+# ==============================================================================
 
 if __name__ == '__main__':
+    # Executa o aplicativo Flask.
+    # debug=False é crucial para ambientes de produção.
     app.run(debug=False)
