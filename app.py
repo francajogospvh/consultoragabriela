@@ -1,3 +1,4 @@
+from flask import send_from_directory
 from flask import Flask, render_template, request, jsonify
 from flask_mail import Mail, Message
 import os
@@ -169,32 +170,36 @@ if __name__ == '__main__':
 
 @app.route('/sitemap.xml')
 def sitemap():
-    return '''<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/</loc>
-        <lastmod>2025-11-21</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#sobre</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#servicos</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#black-friday</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
-    </url>
-    <url>
-        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#contato</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-</urlset>''', 200, {'Content-Type': 'application/xml'}
+    return send_from_directory('static', 'sitemap.xml')
+
+#@app.route('/sitemap.xml')
+#def sitemap():
+#    return '''<?xml version="1.0" encoding="UTF-8"?>
+#<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+#    <url>
+#        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/</loc>
+#        <lastmod>2025-11-21</lastmod>
+#        <changefreq>weekly</changefreq>
+#        <priority>1.0</priority>
+#    </url>
+#    <url>
+#        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#sobre</loc>
+#        <changefreq>monthly</changefreq>
+#        <priority>0.8</priority>
+#    </url>
+#    <url>
+#        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#servicos</loc>
+#        <changefreq>monthly</changefreq>
+#        <priority>0.8</priority>
+#    </url>
+#    <url>
+#        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#black-friday</loc>
+#        <changefreq>weekly</changefreq>
+#        <priority>0.9</priority>
+#    </url>
+#    <url>
+#        <loc>https://corretoradesegurostransparenci.pythonanywhere.com/#contato</loc>
+#        <changefreq>monthly</changefreq>
+#        <priority>0.8</priority>
+#    </url>
+#</urlset>''', 200, {'Content-Type': 'application/xml'}
